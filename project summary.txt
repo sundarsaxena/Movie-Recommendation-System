@@ -1,0 +1,80 @@
+🎯 Objective:
+User koi ek movie ka naam input kare, aur system uske jaise similar movies recommend kare — based on description/tags.
+
+🔧 Step-by-Step Breakdown:
+1. Data Load and Preprocessing
+
+>>>>df = pd.read_csv('movies.csv')
+Tumne movies.csv file load ki — ismein title, overview, genres, keywords, etc. columns hote hain.
+
+2. Feature Engineering
+
+>>>>df['tags'] = df['overview'] + " " + df['genres'] + " " + df['keywords']
+tags column banaya — jismein overview + genres + keywords sab combine kar diye.
+Ye ek tarike ka summary hota hai movie ka — jo comparison ke liye useful hota hai.
+
+3. Text Cleaning (Lowercase)
+
+>>>>df['tags'] = df['tags'].apply(lambda x: x.lower())
+Saare tags ko lowercase mein convert kiya so that Action aur action ko alag na maana jaye.
+
+4. Text Vectorization using TF-IDF
+
+>>>>from sklearn.feature_extraction.text import TfidfVectorizer
+>>>>>tfidf = TfidfVectorizer(max_features=5000, stop_words='english')
+>>>>>vectors = tfidf.fit_transform(df['tags']).toarray()
+>>>>>TF-IDF (Term Frequency–Inverse Document Frequency): 
+
+ye ek technique hoti hai text ko numbers mein convert karne ki.
+Ye batata hai har word kitna important hai ek document ke liye — jise model samajh sake.
+vectors ab har movie ka 5000-dimensional number array hai (mathematically samjha gaya content).
+
+5. Similarity Calculation (Cosine Similarity)
+
+>>>>from sklearn.metrics.pairwise import cosine_similarity
+
+>>>>>similarity = cosine_similarity(vectors)
+
+cosine_similarity har movie ko har doosri movie se compare karta hai aur 0 to 1 ke beech similarity score deta hai.
+similarity[i][j] batata hai ki movie i aur movie j kitni similar hain.
+
+6. Recommendation Function
+
+def recommend(movie):
+    movie = movie.lower()
+    if movie not in df['title'].str.lower().values:
+        print("Movie not found in database.")
+        return
+    index = df[df['title'].str.lower() == movie].index[0]
+    distances = similarity[index]
+    movie_list = sorted(list(enumerate(distances)), reverse=True, key=lambda x: x[1])[1:6]
+    
+    for i in movie_list:
+        print(df.iloc[i[0]].title)
+
+Iska kya matlab hai?
+movie.lower(): input ko lowercase banate hain for matching.
+
+Check if movie exists in database — warna return.
+
+index nikalte ho us movie ka.
+
+similarity[index]: ye line saari movies ke similarity scores laata hai.
+
+enumerate(distances): index ke saath similarity.
+
+Sort karke top 5 movies recommend karta hai — reverse=True means zyada similar wale upar.
+
+🧪 Example:
+
+recommend('Avatar')
+Agar Avatar ke liye tum similarity scores nikaalte ho, toh tumhe uske jaise similar tags wali 5 movies milengi — jinki genre/overview/keywords similar hain.
+
+✅ Summary
+Part	                      Kya karta hai?
+tags banana     	Content combine karna for comparison
+lower()	                Case-insensitive matching ke liye
+TF-IDF	                Text ko numbers mein convert karta hai
+cosine_similarity	Movie similarity nikalta hai
+recommend()	        Similar movies suggest karta hai
+
